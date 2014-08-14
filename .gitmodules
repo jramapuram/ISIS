@@ -1,0 +1,9 @@
+[submodule "libs/MITIE"]
+	path = libs/MITIE
+	url = git://github.com/mit-nlp/MITIE
+[submodule "libs/caffe"]
+	path = libs/caffe
+	url = git://github.com/BVLC/caffe
+[submodule "libs/MOE"]
+	path = libs/MOE
+	url = git://github.com/Yelp/MOE

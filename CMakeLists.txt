@@ -90,26 +90,27 @@ ADD_CUSTOM_TARGET(
 
 
 ###################### <BUILD MITIE> #####################
-
+SET(MITIE_LIBRARY ${CMAKE_CURRENT_SOURCE_DIR}/libs/MITIE/mitielib/libmitie.a)
 ADD_CUSTOM_TARGET(
-   mitie_lib
-   COMMAND make
+   build_mitie ALL
+   COMMAND ${CMAKE_MAKE_PROGRAM}
    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/libs/MITIE
-   #RESULT_VARIABLE rv
 )
-#MESSAGE("rv='${rv}'")
-
+ADD_LIBRARY(mitie STATIC IMPORTED)
+SET_PROPERTY(TARGET mitie APPEND PROPERTY IMPORTED_CONFIGURATIONS NOCONFIG)
+SET_TARGET_PROPERTIES(mitie PROPERTIES IMPORTED_LOCATION_NOCONFIG "${MITIE_LIBRARY}")
+ADD_DEPENDENCIES(mitie build_mitie)
 ###################### </BUILD MITIE> ####################
 
 
 ###################### <BUILD MOE> #####################
-
-ADD_CUSTOM_TARGET(
-   moe_lib
-   COMMAND make
-   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/libs/MOE
-   #RESULT_VARIABLE rv
-)
+#SET(MOE_LIBRARY ${CMAKE_CURRENT_SOURCE_DIR}/libs/MOE/mitielib/libmitie.a)
+#ADD_CUSTOM_TARGET(
+#   moe_lib ALL
+#   COMMAND ${CMAKE_MAKE_PROGRAM}
+#   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/libs/MOE
+#   #RESULT_VARIABLE rv
+#)
 #MESSAGE("rv='${rv}'")
 
 ###################### </BUILD MOE> ####################
@@ -135,5 +136,5 @@ ADD_EXECUTABLE( ISIS.out
 	${ISIS_UI_RES}
 )
 
-TARGET_LINK_LIBRARIES(ISIS.out ${OpenCV_LIBS} ${Boost_LIBRARIES} ${OPENCL_LIBRARIES} ${caffe_lib})
+TARGET_LINK_LIBRARIES(ISIS.out ${OpenCV_LIBS} ${Boost_LIBRARIES} ${OPENCL_LIBRARIES} mitie)
 QT5_USE_MODULES( ISIS.out Widgets PrintSupport)

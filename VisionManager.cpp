@@ -69,4 +69,5 @@ void VisionManager::Run(){
 
 VisionManager::~VisionManager() { // Destructor
     mThreads.interrupt_all();
+    mThreads.join_all();
 }

@@ -103,7 +103,7 @@ private:
     double GradAngle_;
 
 public:
-    typedef std::tuple<std::vector<cv::DMatch>, std::vector<cv::KeyPoints>, std::vector<cv::KeyPoints> > Matched_KeyPoints;
+    typedef std::tuple<std::vector<cv::DMatch>, std::vector<cv::KeyPoint>, std::vector<cv::KeyPoint> > Matched_KeyPoints;
 
     CamInstance(unsigned int, boost::shared_ptr<cv::VideoCapture>);
     ~CamInstance(); // Destructor

@@ -4,6 +4,7 @@ CMAKE_MINIMUM_REQUIRED( VERSION 3.0 )
 PROJECT( ISIS )
 SET(PROJECT_PREFIX isis)
 SET(PROJECT_VERSION "0.2.0")
+SET(USE_GPU 0)
 ADD_DEFINITIONS(-DPROJECT_VERSION="${PROJECT_VERSION}")
 ADD_DEFINITIONS(-DPROJECT_PREFIX="${PROJECT_PREFIX}")
 ###################### </Version> ######################
@@ -14,23 +15,19 @@ INCLUDE_DIRECTORIES (
 )
 SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "/usr/local/include/boost")
 SET(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "/usr/local/lib")
-SET(CMAKE_CXX_FLAGS "-std=c++0x")
+SET(CMAKE_CXX_FLAGS "-std=c++11")
 #SET(CMAKE_AUTOMOC ON)
 SET(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-###################### <INSTALL QT5 & BOOST> ######################
+###################### <ADD QT5 & BOOST PARAMS> ######################
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    EXECUTE_PROCESS(
-        COMMAND "brew install qt5 boost"
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    )
     SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "/usr/local/Cellar/qt5/5.3.0/lib/cmake/Qt5Widgets/")  #"~/Applications/Qt5.3.0/5.3/clang_64/lib/cmake/Qt5Widgets")
 ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     #TODO : Add linux specifics here
 ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-###################### </INSTALL QT5 & BOOST> ######################
+###################### </ADD QT5 & BOOST PARAMS> ######################
 
 ###################### <UI INCLUDES> ######################
 SET(ISIS_UI_RESOURCES
@@ -77,15 +74,37 @@ FIND_PACKAGE( Boost COMPONENTS thread system filesystem chrono log program_optio
 
 
 ###################### <BUILD CAFFE> #####################
+IF(${USE_GPU})
+    ADD_CUSTOM_TARGET(caffe_conf 
+    COMMAND ${CMAKE_COMMAND} -E copy 
+    ${CMAKE_CURRENT_SOURCE_DIR}/libs/conf/caffe/Makefile.config.gpu
+    ${CMAKE_CURRENT_SOURCE_DIR}/libs/caffe/Makefile.config)
+ELSE(${USE_GPU})
+    ADD_CUSTOM_TARGET(caffe_conf 
+    COMMAND ${CMAKE_COMMAND} -E copy 
+    ${CMAKE_CURRENT_SOURCE_DIR}/libs/conf/caffe/Makefile.config.cpu
+    ${CMAKE_CURRENT_SOURCE_DIR}/libs/caffe/Makefile.config)
+ENDIF(${USE_GPU})
+
+IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    ADD_CUSTOM_TARGET(caffe_gtest_fix
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/libs/conf/caffe/make_osx_compatible.rb
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/libs/conf/caffe
+)
+ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+
+SET(CAFFE_LIBRARY ${CMAKE_CURRENT_SOURCE_DIR}/libs/caffe/build/lib/libcaffe.a)
 
 ADD_CUSTOM_TARGET(
-   caffe_lib
-   COMMAND make
+   build_caffe ALL
+   COMMAND ${CMAKE_MAKE_PROGRAM}
+   #DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/libs/caffe/Makefile.config
    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/libs/caffe
-   #RESULT_VARIABLE rv
 )
-#MESSAGE("rv='${rv}'")
-
+ADD_LIBRARY(caffe STATIC IMPORTED)
+SET_PROPERTY(TARGET caffe APPEND PROPERTY IMPORTED_CONFIGURATIONS NOCONFIG)
+SET_TARGET_PROPERTIES(caffe PROPERTIES IMPORTED_LOCATION_NOCONFIG "${CAFFE_LIBRARY}")
+ADD_DEPENDENCIES(caffe caffe_conf build_caffe caffe_gtest_fix)
 ###################### </BUILD CAFFE> ####################
 
 
@@ -136,5 +155,5 @@ ADD_EXECUTABLE( ISIS.out
 	${ISIS_UI_RES}
 )
 
-TARGET_LINK_LIBRARIES(ISIS.out ${OpenCV_LIBS} ${Boost_LIBRARIES} ${OPENCL_LIBRARIES} mitie)
+TARGET_LINK_LIBRARIES(ISIS.out ${OpenCV_LIBS} ${Boost_LIBRARIES} ${OPENCL_LIBRARIES} mitie caffe)
 QT5_USE_MODULES( ISIS.out Widgets PrintSupport)

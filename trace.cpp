@@ -20,7 +20,7 @@
 #include <boost/log/sources/severity_channel_logger.hpp>
 #include <boost/log/support/date_time.hpp>
 #include <boost/log/expressions/formatters/date_time.hpp>
-#include <boost/log/utility/empty_deleter.hpp>
+#include <boost/utility/empty_deleter.hpp>
 #include <boost/filesystem.hpp>
 //------------------------------------------------------------------------------
 
@@ -67,7 +67,7 @@ void trace::addStdSink()
 {
     boost::shared_ptr< sinks::text_ostream_backend > StdBackend =
         boost::make_shared< sinks::text_ostream_backend >();
-    boost::shared_ptr< std::ostream > StdStream(&std::clog, boost::log::empty_deleter()); //create cout sink
+    boost::shared_ptr< std::ostream > StdStream(&std::clog, boost::empty_deleter()); //create cout sink
     boost::shared_ptr< ostream_sink > StdSink (new ostream_sink(StdBackend));
     StdSink->locked_backend()->add_stream(StdStream);
     StdBackend->auto_flush(true);

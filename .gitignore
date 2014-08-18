@@ -22,3 +22,6 @@
 
 # Build dir
 build
+
+# external libs dir
+libs

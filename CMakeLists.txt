@@ -1,10 +1,10 @@
-CMAKE_MINIMUM_REQUIRED( VERSION 3.0 )
+CMAKE_MINIMUM_REQUIRED( VERSION 2.8 )
 
 ###################### <Version> ######################
 PROJECT( ISIS )
 SET(PROJECT_PREFIX isis)
 SET(PROJECT_VERSION "0.2.0")
-SET(USE_GPU 0)
+SET(USE_GPU 1)
 ADD_DEFINITIONS(-DPROJECT_VERSION="${PROJECT_VERSION}")
 ADD_DEFINITIONS(-DPROJECT_PREFIX="${PROJECT_PREFIX}")
 ###################### </Version> ######################
@@ -25,6 +25,7 @@ IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "/usr/local/qt5/5.3/gcc_64/lib/cmake/Qt5Widgets")
     #TODO : Add linux specifics here
 ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 ###################### </ADD QT5 & BOOST PARAMS> ######################
@@ -87,8 +88,13 @@ ELSE(${USE_GPU})
 ENDIF(${USE_GPU})
 
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    ADD_CUSTOM_TARGET(caffe_gtest_fix
+    ADD_CUSTOM_TARGET(caffe_fix
     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/libs/conf/caffe/make_osx_compatible.rb
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/libs/conf/caffe
+)
+ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    ADD_CUSTOM_TARGET(caffe_fix
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/libs/conf/caffe/make_linux_compatible.rb
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/libs/conf/caffe
 )
 ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
@@ -104,7 +110,7 @@ ADD_CUSTOM_TARGET(
 ADD_LIBRARY(caffe STATIC IMPORTED)
 SET_PROPERTY(TARGET caffe APPEND PROPERTY IMPORTED_CONFIGURATIONS NOCONFIG)
 SET_TARGET_PROPERTIES(caffe PROPERTIES IMPORTED_LOCATION_NOCONFIG "${CAFFE_LIBRARY}")
-ADD_DEPENDENCIES(caffe caffe_conf build_caffe caffe_gtest_fix)
+ADD_DEPENDENCIES(caffe caffe_conf build_caffe caffe_fix)
 ###################### </BUILD CAFFE> ####################
 
 

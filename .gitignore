@@ -25,3 +25,6 @@ build
 
 # external libs dir
 libs
+
+# misc
+CMakeLists.txt.user

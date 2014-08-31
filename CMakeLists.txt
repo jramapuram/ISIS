@@ -11,8 +11,11 @@ ADD_DEFINITIONS(-DPROJECT_PREFIX="${PROJECT_PREFIX}")
 
 INCLUDE_DIRECTORIES (
 	"${PROJECT_SOURCE_DIR}/includes" 
-    "${PROJECT_SOURCE_DIR}/ui/includes"
+        "${PROJECT_SOURCE_DIR}/libs/caffe/include"
+        "${PROJECT_SOURCE_DIR}/libs/MITIE/mitielib/include"
+        "${PROJECT_SOURCE_DIR}/ui/includes"
 )
+
 SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "/usr/local/include/boost")
 SET(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "/usr/local/lib")
 SET(CMAKE_CXX_FLAGS "-std=c++11")
@@ -76,16 +79,26 @@ FIND_PACKAGE( Boost COMPONENTS thread system filesystem chrono log program_optio
 
 ###################### <BUILD CAFFE> #####################
 IF(${USE_GPU})
-    ADD_CUSTOM_TARGET(caffe_conf 
-    COMMAND ${CMAKE_COMMAND} -E copy 
+    ADD_CUSTOM_TARGET(caffe_conf
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
     ${CMAKE_CURRENT_SOURCE_DIR}/libs/conf/caffe/Makefile.config.gpu
     ${CMAKE_CURRENT_SOURCE_DIR}/libs/caffe/Makefile.config)
 ELSE(${USE_GPU})
-    ADD_CUSTOM_TARGET(caffe_conf 
-    COMMAND ${CMAKE_COMMAND} -E copy 
+    ADD_CUSTOM_TARGET(caffe_conf
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
     ${CMAKE_CURRENT_SOURCE_DIR}/libs/conf/caffe/Makefile.config.cpu
     ${CMAKE_CURRENT_SOURCE_DIR}/libs/caffe/Makefile.config)
 ENDIF(${USE_GPU})
+
+ADD_CUSTOM_TARGET(isis_proto
+   COMMAND ${CMAKE_COMMAND} -E copy_if_different
+   ${CMAKE_CURRENT_SOURCE_DIR}/isis.proto
+   ${CMAKE_BINARY_DIR}/isis.proto)
+
+ADD_CUSTOM_TARGET(isis_solver_proto
+   COMMAND ${CMAKE_COMMAND} -E copy_if_different
+   ${CMAKE_CURRENT_SOURCE_DIR}/isis_solver.proto
+   ${CMAKE_BINARY_DIR}/isis_solver.proto)
 
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     ADD_CUSTOM_TARGET(caffe_fix
@@ -99,29 +112,29 @@ ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 )
 ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
-SET(CAFFE_LIBRARY ${CMAKE_CURRENT_SOURCE_DIR}/libs/caffe/build/lib/libcaffe.a)
+SET(CAFFE_LIBRARY ${CMAKE_CURRENT_SOURCE_DIR}/libs/caffe/build/lib/libcaffe.so)
 
 ADD_CUSTOM_TARGET(
    build_caffe ALL
    COMMAND ${CMAKE_MAKE_PROGRAM}
-   #DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/libs/caffe/Makefile.config
    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/libs/caffe
 )
-ADD_LIBRARY(caffe STATIC IMPORTED)
+ADD_LIBRARY(caffe SHARED IMPORTED)
 SET_PROPERTY(TARGET caffe APPEND PROPERTY IMPORTED_CONFIGURATIONS NOCONFIG)
 SET_TARGET_PROPERTIES(caffe PROPERTIES IMPORTED_LOCATION_NOCONFIG "${CAFFE_LIBRARY}")
-ADD_DEPENDENCIES(caffe caffe_conf build_caffe caffe_fix)
+ADD_DEPENDENCIES(caffe caffe_conf build_caffe caffe_fix isis_proto isis_solver_proto)
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/libs/caffe/build/src)
 ###################### </BUILD CAFFE> ####################
 
 
 ###################### <BUILD MITIE> #####################
-SET(MITIE_LIBRARY ${CMAKE_CURRENT_SOURCE_DIR}/libs/MITIE/mitielib/libmitie.a)
+SET(MITIE_LIBRARY ${CMAKE_CURRENT_SOURCE_DIR}/libs/MITIE/mitielib/libmitie.so)
 ADD_CUSTOM_TARGET(
    build_mitie ALL
    COMMAND ${CMAKE_MAKE_PROGRAM}
    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/libs/MITIE
 )
-ADD_LIBRARY(mitie STATIC IMPORTED)
+ADD_LIBRARY(mitie SHARED IMPORTED)
 SET_PROPERTY(TARGET mitie APPEND PROPERTY IMPORTED_CONFIGURATIONS NOCONFIG)
 SET_TARGET_PROPERTIES(mitie PROPERTIES IMPORTED_LOCATION_NOCONFIG "${MITIE_LIBRARY}")
 ADD_DEPENDENCIES(mitie build_mitie)
@@ -153,13 +166,18 @@ IF(Boost_FOUND)
         ADD_DEFINITIONS( "-DHAS_BOOST" "-DBOOST_ALL_DYN_LINK")
 ENDIF()
 
+IF(CUDA_FOUND)
+       INCLUDE_DIRECTORIES(${CUDA_INCLUDE_DIRS})
+ENDIF()
+
 ADD_EXECUTABLE( ISIS.out  
 	${ISIS_SOURCE} 
 	${ISIS_UI_CPP} 
 	${ISIS_HEADERS_MOC} 
 	${ISIS_FORMS_HEADERS} 
 	${ISIS_UI_RES}
+        ${CUDA_INCLUDE_DIRS}
 )
 
-TARGET_LINK_LIBRARIES(ISIS.out ${OpenCV_LIBS} ${Boost_LIBRARIES} ${OPENCL_LIBRARIES} mitie caffe)
+TARGET_LINK_LIBRARIES(ISIS.out ${OpenCV_LIBS} ${Boost_LIBRARIES} mitie caffe)
 QT5_USE_MODULES( ISIS.out Widgets PrintSupport)

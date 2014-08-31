@@ -17,7 +17,7 @@ CamInstance::CamInstance(unsigned int index, boost::shared_ptr<cv::VideoCapture>
     , isAlreadyRecording    (false) //we are not initially recording
 {
     double depthSensorCode = camRef->get( CV_CAP_PROP_OPENNI_GENERATOR_PRESENT );
-    m_DepthSensorExists    = depthSensorCode < 0;
+    m_DepthSensorExists    = 0;//depthSensorCode < 0;
     if(m_DepthSensorExists) log()->info("DepthSensor detected with value: %f",depthSensorCode);
 
     GenericInit();
@@ -174,14 +174,14 @@ const cv::Mat& CamInstance::getImage(){
 
 const cv::Mat& CamInstance::getForegroundImage(){
     {//scoped lock
-        boost::mutex::scoped_lock lock(mPoll);
+        //boost::mutex::scoped_lock lock(mPoll);
         return foreground_;
     }
 }
 
 const cv::Mat& CamInstance::getSegmentedImage(){
     {//scoped lock
-        boost::mutex::scoped_lock lock(mPoll);
+        //boost::mutex::scoped_lock lock(mPoll);
         return segmentedImage_;
     }
 }
@@ -249,15 +249,14 @@ bool CamInstance::isOpened(){
  */
 void CamInstance::grabImage(){
     while(Isis::isRunning){
+//        boost::mutex::scoped_lock lk(mPoll);
         if(m_DepthSensorExists){
-            boost::mutex::scoped_lock lk(mPoll);
-
             input->grab();
             input->retrieve(imCur_,CV_CAP_OPENNI_BGR_IMAGE);
             input->retrieve(imDepth_,CV_CAP_OPENNI_DEPTH_MAP);
         }else{
-            boost::mutex::scoped_lock lk(mPoll);
-
+            //log()->debug("prepoll");
+//            boost::mutex::scoped_lock lk(mPoll);
             input->operator >>(imCur_);
         }
         ExitConditionCheck();
@@ -415,13 +414,13 @@ int CamInstance::MixtureOfGaussians(const Mat& img)
 /**
  * Tabulate init rectangle and then run CamShift on the system to move the region
  */
-Mat CamInstance::segmentImage()
+Mat CamInstance::segmentImage(const cv::Mat& imgToSegment)
 {
     Mat retval;
     if(!isMatrixNull(foreground_)){
         Rect camshiftResult = getNonZeroROI(foreground_);
         if(!isRectNull(camshiftResult)) {
-            retval = GetMotionImage(getImage(),foreground_,camshiftResult);
+            retval = GetMotionImage(imgToSegment, foreground_, camshiftResult);
         }
     }
     return retval;
@@ -433,14 +432,17 @@ Mat CamInstance::segmentImage()
  */
 void CamInstance::MovementDetection()
 {
-    MOGMag_  = MixtureOfGaussians(getImage()); //Mixed Model
-    GradAngle_ = DetectMotionDirection(getImage()); // Gradient Magnitude
-//    log()->debug("Gradmad: %e | MOGMAG: %e",GradAngle_, MOGMag_);
-    if(IsThereMotion(MOGMag_, GradAngle_)){
-        segmentedImage_ = segmentImage();
-        if(!segmentedImage_.empty()){
-            cvtColor(segmentedImage_, segmentedImage_, CV_BGR2GRAY);
-            imgQueue.Enqueue(segmentedImage_);
+    Mat latestimg = getImage();
+    if(!latestimg.empty()){
+        MOGMag_  = MixtureOfGaussians(latestimg); //Mixed Model
+        GradAngle_ = DetectMotionDirection(latestimg); // Gradient Magnitude
+    //    log()->debug("Gradmad: %e | MOGMAG: %e",GradAngle_, MOGMag_);
+        if(IsThereMotion(MOGMag_, GradAngle_)){
+            segmentedImage_ = segmentImage(latestimg);
+            if(!segmentedImage_.empty()){
+                cvtColor(segmentedImage_, segmentedImage_, CV_BGR2GRAY);
+                imgQueue.Enqueue(imCur_);//segmentedImage_);
+            }
         }
     }
 }
@@ -462,7 +464,7 @@ void CamInstance::Run() {
     RegisterEvents();
     imPollerThread.reset(new boost::thread(&CamInstance::grabImage,this));
 
-    boost::posix_time::millisec workTime(33);
+    boost::posix_time::millisec workTime(120);
     while(Isis::isRunning){
         boost::this_thread::sleep(workTime);
         MovementDetection();

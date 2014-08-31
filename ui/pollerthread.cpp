@@ -15,7 +15,7 @@ PollerThread::~PollerThread(){
 }
 
 void PollerThread::run(){
-    QThread::sleep(5); //XX fix this shit
+    QThread::sleep(3); //XX fix this shit
 
     bool isRunning_ = true;
 
@@ -24,7 +24,9 @@ void PollerThread::run(){
         if(pVisionManager != nullptr){
             auto pCamera = pVisionManager->getCAMInstance(0);
             if(pCamera != nullptr){
+//                std::cout<<"trying to pull...\n";
                 QImage imCur = cvtCvMat2QImage(pCamera->getImage());
+//                std::cout<<"pull success...\n";
                 emit pollImage(imCur);
 
                 isRunning_ = isis::Isis::isRunning && isRunning();

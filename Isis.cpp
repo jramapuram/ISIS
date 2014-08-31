@@ -27,10 +27,12 @@ int Isis::CreateThreads() {
         for (int i = 0; i < Isis::config->numCams; i++) {
             boost::shared_ptr<cv::VideoCapture> cvInputObj(new cv::VideoCapture(i));
             if (cvInputObj->isOpened()) vision->addCAM(cvInputObj);
+            else Isis::main->error("Error opening camera [%d]", i);
         }
     }else {
         boost::shared_ptr<cv::VideoCapture> cvInputObj(new cv::VideoCapture(Isis::config->singleCam));
         if (cvInputObj->isOpened()) vision->addCAM(cvInputObj);
+        else Isis::main->error("Error opening single camera [%d]", Isis::config->singleCam);
     }
 
     IsisThreads.create_thread(boost::bind(&speech::RunApp, listen));

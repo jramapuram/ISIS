@@ -89,7 +89,7 @@ private:
     bool isMatrixNull(const cv::Mat &);
 
     int MixtureOfGaussians(const cv::Mat&);
-    cv::Mat segmentImage();
+    cv::Mat segmentImage(const cv::Mat &imgToSegment);
 
     void RegisterEvents();
     void AITrainCompletedSlot();

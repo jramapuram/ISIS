@@ -49,14 +49,17 @@ void VisionManager::CreateStorageDirectories()
 
 void VisionManager::initialize(){
     CreateStorageDirectories();
-    for(auto v : mVisionObjects){
-        mThreads.create_thread(boost::bind(&CamInstance::RunApp, v));
-    }
-    for(auto a : mAIObjects){
-        mThreads.create_thread(boost::bind(&AI::RunApp, a));
-    }
-    log()->info("Threads created successfully. Proceeding to join");
-    mThreads.join_all();
+
+    if(mVisionObjects.size() && mAIObjects.size()){
+        for(auto v : mVisionObjects){
+            mThreads.create_thread(boost::bind(&CamInstance::RunApp, v));
+        }
+        for(auto a : mAIObjects){
+            mThreads.create_thread(boost::bind(&AI::RunApp, a));
+        }
+        log()->info("Threads created successfully. Proceeding to join");
+        mThreads.join_all();
+    }else throw std::runtime_error("Error, no valid vision and ai threads defined");
 }
 
 void VisionManager::Run(){

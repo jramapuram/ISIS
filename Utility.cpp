@@ -60,6 +60,13 @@ namespace Utility {
 		return true;
 	}
 
+    void removeAll(const std::string& dir){
+        boost::filesystem::path directory(dir);
+        if(boost::filesystem::exists(directory)){
+            boost::filesystem::remove_all(directory);
+        }
+    }
+
     /**
      * @brief convertTo32Bit: helper to convert to FP matrix
      * @param InputMat

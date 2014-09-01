@@ -14,6 +14,7 @@ namespace Utility{
     bool runProgram(const std::string&);
 	std::string get_cur_date();
 	bool CreateDirectory(std::string);
+    void removeAll(const std::string& dir);
     cv::Mat imgResize(const cv::Mat & , CvSize, bool, bool);
 	cv::Mat doMultiPCA(cv::Mat*,CvSize );
     std::vector<cv::Mat> imgSegment(const cv::Mat&,int SplitFactor=8); //default split factor is 8

@@ -5,13 +5,29 @@ layers {
   top: "data"
   top: "label"
   image_data_param {
-    source: "img/current_images.txt"
-    batch_size: 4
+    source: "img/train_images.txt"
+    batch_size: 10
+    crop_size: 227
+    mirror: true
+    new_height: 256
+    new_width: 256
+  }
+  include: { phase: TRAIN }
+}
+layers {
+  name: "data"
+  type: IMAGE_DATA
+  top: "data"
+  top: "label"
+  image_data_param {
+    source: "img/test_images.txt"
+    batch_size: 20
     crop_size: 227
     mirror: false
     new_height: 256
     new_width: 256
   }
+  include: { phase: TEST }
 }
 layers {
   name: "conv1"
@@ -250,4 +266,11 @@ layers {
   type: SOFTMAX
   bottom: "fc8"
   top: "prob"
+}
+layers {
+  name: "output"
+  type: ARGMAX
+  bottom: "prob"
+  top: "output"
+  include: { phase: TEST }
 }

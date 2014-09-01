@@ -436,8 +436,8 @@ void CamInstance::MovementDetection()
     if(!latestimg.empty()){
         MOGMag_  = MixtureOfGaussians(latestimg); //Mixed Model
         GradAngle_ = DetectMotionDirection(latestimg); // Gradient Magnitude
-    //    log()->debug("Gradmad: %e | MOGMAG: %e",GradAngle_, MOGMag_);
         if(IsThereMotion(MOGMag_, GradAngle_)){
+            log()->debug("Motion detected [Gradmad: %e | MOGMAG: %e]",GradAngle_, MOGMag_);
             segmentedImage_ = segmentImage(latestimg);
             if(!segmentedImage_.empty()){
                 cvtColor(segmentedImage_, segmentedImage_, CV_BGR2GRAY);

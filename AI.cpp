@@ -25,7 +25,8 @@ AI::~AI() {
 }
 
 void AI::TrainNet(const std::string& filename){
-    Caffe::set_phase(Caffe::TRAIN);
+//    Caffe::set_mode(Caffe::GPU);
+////    Caffe::set_phase(Caffe::TRAIN);
     SolverParameter solver_param;
     ReadProtoFromTextFile(filename, &solver_param);
     SGDSolver<float> solver(solver_param);
@@ -36,12 +37,34 @@ void AI::TrainNet(const std::string& filename){
     isTrainingComplete_ = true;
 }
 
-void AI::Predict(const cv::Mat &img){
+void AI::Predict(const cv::Mat &img, const std::string& filename){
+    if(predictDataSetSize_++ < BUFFER_SIZE){
+        WriteToFile(img, PREDICT_LIST_FILE, 0);
+    }else{
+        Net<float> caffe_test_net(filename); //get the net
+        caffe_test_net.CopyTrainedLayersFrom(TRAINED_NET); //get trained net
 
+        float loss; // Run Forward pass
+        auto& result =  caffe_test_net.ForwardPrefilled(&loss);
+
+        // Now result will contain the argmax results.
+        const float* argmaxs = result[0]->cpu_data();
+        for (int i = 0; i < result[0]->num(); ++i) {
+          log()->info("Image %d is of class %f", i, argmaxs[i]);
+        }
+
+        //clean up all the prediction files
+        std::ifstream infile(filename);
+        std::string line;
+        while (std::getline(infile, line)){
+            log()->debug("Trying to remove: %s", line);
+            removeAll(line);
+        }
+    }
 }
 
-void AI::WriteToFile(const cv::Mat &img, uint64_t classif){
-    std::ofstream of(IMG_DIR + "/" + CURRENT_FILE_LIST, std::ios_base::app | std::ios_base::ate | std::ios_base::out);
+void AI::WriteToFile(const cv::Mat &img, const std::string& filename, uint64_t classif){
+    std::ofstream of(IMG_DIR + "/" + filename, std::ios_base::app | std::ios_base::ate | std::ios_base::out);
     std::string latestfile = IMG_DIR + "/" + std::to_string((uint64_t)getTimeSinceEpochMS()) + ".JPEG";
     cv::imwrite(latestfile, img);
     of<<latestfile<<" "<<classif<<std::endl;
@@ -58,11 +81,12 @@ void AI::PullImgQueue() {
   normalize(latestImg_);
 
   if(!isTrainingComplete_ && currentDataSetSize_++ < DATA_SET_SIZE){
-    WriteToFile(latestImg_, 0);
+    (currentDataSetSize_ > 0.8f*DATA_SET_SIZE)? WriteToFile(latestImg_, TESTING_LIST_FILE, 0)
+                                              : WriteToFile(latestImg_, TRAINING_LIST_FILE, 0);
   }else if(!isTrainingComplete_){
     TrainNet(PROTO_FILE);
   }else{
-    Predict(latestImg_);
+    Predict(latestImg_, PROTO_FILE);
   }
 }
 

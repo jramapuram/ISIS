@@ -90,16 +90,6 @@ ELSE(${USE_GPU})
     ${CMAKE_CURRENT_SOURCE_DIR}/libs/caffe/Makefile.config)
 ENDIF(${USE_GPU})
 
-ADD_CUSTOM_TARGET(isis_proto
-   COMMAND ${CMAKE_COMMAND} -E copy_if_different
-   ${CMAKE_CURRENT_SOURCE_DIR}/isis.proto
-   ${CMAKE_BINARY_DIR}/isis.proto)
-
-ADD_CUSTOM_TARGET(isis_solver_proto
-   COMMAND ${CMAKE_COMMAND} -E copy_if_different
-   ${CMAKE_CURRENT_SOURCE_DIR}/isis_solver.proto
-   ${CMAKE_BINARY_DIR}/isis_solver.proto)
-
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     ADD_CUSTOM_TARGET(caffe_fix
     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/libs/conf/caffe/make_osx_compatible.rb
@@ -112,6 +102,11 @@ ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 )
 ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
+ADD_CUSTOM_TARGET(caffe_get_model
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/libs/caffe/examples/imagenet/get_caffe_reference_imagenet_model.sh
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/libs/caffe/examples/imagenet
+)
+
 SET(CAFFE_LIBRARY ${CMAKE_CURRENT_SOURCE_DIR}/libs/caffe/build/lib/libcaffe.so)
 
 ADD_CUSTOM_TARGET(
@@ -122,9 +117,28 @@ ADD_CUSTOM_TARGET(
 ADD_LIBRARY(caffe SHARED IMPORTED)
 SET_PROPERTY(TARGET caffe APPEND PROPERTY IMPORTED_CONFIGURATIONS NOCONFIG)
 SET_TARGET_PROPERTIES(caffe PROPERTIES IMPORTED_LOCATION_NOCONFIG "${CAFFE_LIBRARY}")
-ADD_DEPENDENCIES(caffe caffe_conf build_caffe caffe_fix isis_proto isis_solver_proto)
+ADD_DEPENDENCIES(caffe caffe_conf build_caffe caffe_fix caffe_get_model)
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/libs/caffe/build/src)
 ###################### </BUILD CAFFE> ####################
+
+###################### <MODELS> #####################
+
+SET(REQD_MODELS
+    isis.proto
+    isis_solver.proto
+    imagenet_deploy.prototxt
+    caffe_reference_imagenet_model
+)
+FILE(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/models)
+FOREACH(f ${REQD_MODELS})
+    ADD_CUSTOM_TARGET(model_${f} ALL
+       COMMAND ${CMAKE_COMMAND} -E copy_if_different
+       ${CMAKE_CURRENT_SOURCE_DIR}/models/${f}
+       ${CMAKE_BINARY_DIR}/models/${f}
+       DEPENDS caffe_get_model
+     )
+ENDFOREACH(f)
+###################### </MODELS> #####################
 
 
 ###################### <BUILD MITIE> #####################
@@ -179,5 +193,5 @@ ADD_EXECUTABLE( ISIS.out
         ${CUDA_INCLUDE_DIRS}
 )
 
-TARGET_LINK_LIBRARIES(ISIS.out ${OpenCV_LIBS} ${Boost_LIBRARIES} mitie caffe)
+TARGET_LINK_LIBRARIES(ISIS.out ${OpenCV_LIBS} ${Boost_LIBRARIES} mitie caffe gflags)
 QT5_USE_MODULES( ISIS.out Widgets PrintSupport)

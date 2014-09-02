@@ -43,8 +43,8 @@ AI* VisionManager::getAIInstance(unsigned int index) const{
 
 void VisionManager::CreateStorageDirectories()
 {
-    if(!CreateDirectory("img")) log()->error("Error creating img dir");
-    if(!CreateDirectory("video")) log()->error("Error creating video dir");
+    if(!create_directory("img")) log()->error("Error creating img dir");
+    if(!create_directory("video")) log()->error("Error creating video dir");
 }
 
 void VisionManager::initialize(){

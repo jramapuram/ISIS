@@ -50,7 +50,7 @@ namespace Utility {
 	/**
 	 * Helper to create directories
 	 */
-	bool CreateDirectory(std::string path)
+	bool create_directory(std::string path)
 	{
 		boost::filesystem::path dirToCreate(path);
 		if(!boost::filesystem::exists(dirToCreate)){

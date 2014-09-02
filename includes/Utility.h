@@ -13,7 +13,7 @@ namespace Utility{
 	double getTimeSinceEpochMS();
     bool runProgram(const std::string&);
 	std::string get_cur_date();
-	bool CreateDirectory(std::string);
+	bool create_directory(std::string);
     void removeAll(const std::string& dir);
     cv::Mat imgResize(const cv::Mat & , CvSize, bool, bool);
 	cv::Mat doMultiPCA(cv::Mat*,CvSize );

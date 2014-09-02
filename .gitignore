@@ -28,3 +28,4 @@ libs
 
 # misc
 CMakeLists.txt.user
+.idea

@@ -20,13 +20,16 @@ private:
     const uint64_t    BUFFER_SIZE        = 10;
     const std::string MODEL_DIR          = "models";
     const std::string IMG_DIR            = "img";
+    const std::string PREDICT_DIR        = "predict";
+    const std::string TRAIN_DIR          = "train";
     const std::string PROTO_FILE_SOLV    = "isis_solver.proto";
     const std::string PROTO_FILE         = "isis.proto";
     const std::string IMAGENET_MODEL     = "caffe_reference_imagenet_model";
-    const std::string TRAINED_NET        = "isis_train";
+    const std::string TRAINED_MODEL_PFX  = "isis_train";
     const std::string TRAINING_LIST_FILE = "train_images.txt";
     const std::string TESTING_LIST_FILE  = "test_images.txt";
     const std::string PREDICT_LIST_FILE  = "predict_images.txt";
+    const std::string SYNSET_FILE        = "synset_words.txt";
 
     SyncQueue<cv::Mat>& imgQueue;
     unsigned int        index_;
@@ -41,15 +44,16 @@ private:
     void set_events();
     void normalize(cv::Mat& img);
     void train(const std::string& proto_filename);
-    void write_to_file(const cv::Mat& img, const std::string &filename, uint64_t classif);
+    void write_to_file(const cv::Mat& img, const std::string &imagename, const std::string &directory, const std::string &filename, uint64_t classif);
     caffe::Net<float>* load_network(const std::string& proto_model, const std::string& model_path);
+    const std::string indexToStr(const std::string& file_list, uint64_t line_number);
 
 public:
     AI(unsigned int , SyncQueue<cv::Mat>&);
     ~AI(); 
 
     void Run();
-    void predict(const std::string& network_proto, const std::string& file_list);
+    void predict(const std::string& network_proto);
 };
 
 }//namespace

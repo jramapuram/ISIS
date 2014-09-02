@@ -102,11 +102,6 @@ ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 )
 ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
-ADD_CUSTOM_TARGET(caffe_get_model
-    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/libs/caffe/examples/imagenet/get_caffe_reference_imagenet_model.sh
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/libs/caffe/examples/imagenet
-)
-
 SET(CAFFE_LIBRARY ${CMAKE_CURRENT_SOURCE_DIR}/libs/caffe/build/lib/libcaffe.so)
 
 ADD_CUSTOM_TARGET(
@@ -117,17 +112,17 @@ ADD_CUSTOM_TARGET(
 ADD_LIBRARY(caffe SHARED IMPORTED)
 SET_PROPERTY(TARGET caffe APPEND PROPERTY IMPORTED_CONFIGURATIONS NOCONFIG)
 SET_TARGET_PROPERTIES(caffe PROPERTIES IMPORTED_LOCATION_NOCONFIG "${CAFFE_LIBRARY}")
-ADD_DEPENDENCIES(caffe caffe_conf build_caffe caffe_fix caffe_get_model)
+ADD_DEPENDENCIES(caffe caffe_conf build_caffe caffe_fix)
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/libs/caffe/build/src)
 ###################### </BUILD CAFFE> ####################
 
 ###################### <MODELS> #####################
-
 SET(REQD_MODELS
     isis.proto
     isis_solver.proto
     imagenet_deploy.prototxt
     caffe_reference_imagenet_model
+    synset_words.txt
 )
 FILE(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/models)
 FOREACH(f ${REQD_MODELS})
@@ -135,7 +130,7 @@ FOREACH(f ${REQD_MODELS})
        COMMAND ${CMAKE_COMMAND} -E copy_if_different
        ${CMAKE_CURRENT_SOURCE_DIR}/models/${f}
        ${CMAKE_BINARY_DIR}/models/${f}
-       DEPENDS caffe_get_model
+       #DEPENDS get_imagenet_model get_imagenet_extras
      )
 ENDFOREACH(f)
 ###################### </MODELS> #####################

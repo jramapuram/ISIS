@@ -1,29 +1,18 @@
-/**
- * Utility functions that might be needed from different portions of the app
- */
+#include <boost/algorithm/string.hpp>
 #include "Utility.h"
 
 namespace Utility {
-	/**
-	 * OS Invariant Steady time sample :)
-	 */
+
 	boost::chrono::steady_clock::time_point getSteadyTime()
 	{
 		return( boost::chrono::steady_clock::now());
 	}
 
-	/**
-	 * Returns time since epoch as a double using boost
-	 */
+
 	double getTimeSinceEpochMS(){
 		return((double) boost::chrono::duration_cast<boost::chrono::milliseconds>(boost::chrono::steady_clock::now().time_since_epoch()).count());
 	}
 
-    /**
-     * @brief runProgram :runs the appropriate program
-     * @param cmd
-     * @return
-     */
     bool runProgram(const std::string& cmd){
         bool retval=false;
         if(system(NULL)){ //if we have a command processor available
@@ -34,9 +23,12 @@ namespace Utility {
         return retval;
     }
 
-	/**
-	 * Helper that returns the current date
-	 */
+    std::vector<std::string> split(const std::string& str, const char* separator){
+        std::vector<std::string> retval;
+        boost::split(retval, str, boost::is_any_of(separator));
+        return retval;
+    }
+
 	std::string get_cur_date()
 	{
 		time_t now; struct tm *timeinfo;std::string retStr;
@@ -47,14 +39,11 @@ namespace Utility {
 		return retStr;
 	}
 
-	/**
-	 * Helper to create directories
-	 */
 	bool create_directory(std::string path)
 	{
 		boost::filesystem::path dirToCreate(path);
 		if(!boost::filesystem::exists(dirToCreate)){
-			if (!boost::filesystem::create_directory(dirToCreate))
+            if (!boost::filesystem::create_directories(dirToCreate))
 				return false;
 		}
 		return true;
@@ -67,11 +56,6 @@ namespace Utility {
         }
     }
 
-    /**
-     * @brief convertTo32Bit: helper to convert to FP matrix
-     * @param InputMat
-     * @return
-     */
     void convertTo32Bit(cv::Mat* InputOutputMat)
     {
         //cv::Mat retval;//=InputMat.clone();
@@ -120,11 +104,6 @@ namespace Utility {
         return type.str();
     }
 
-	/**
-	 * Resizes image to newImgSize
-	 * convertToSingleRow: converts image into a single row
-	 * convertToCV32FC1: converts format to CV32FC_1 (sometimes needed for compatibility)
-	 */
     cv::Mat imgResize(const cv::Mat& img, CvSize newImgSize, bool convertToSingleRow, bool convertToCV32FC1){
 		cv::Mat retval;
         if(img.rows != newImgSize.height && img.cols!=newImgSize.width){
@@ -136,20 +115,13 @@ namespace Utility {
         if(convertToCV32FC1) retval.convertTo(retval,CV_32FC1);
 		return retval;
 	}
-    /**
-     * @brief sigmoid:  f(x)=\beta*(1-e^{-\alpha x})/(1+e^{-\alpha x} )
-     * @param InputMat
-     * @return
-     */
+
     cv::Mat sigmoid(const cv::Mat& InputMat,float beta,float alpha){
         cv::Mat retval;
         cv::exp((-1*alpha*InputMat),retval);
         return(beta*(1-retval)/(1+retval));
     }
 
-	/**
-	 * Return a segmented image of squares
-	 */
     std::vector<cv::Mat> imgSegment(const cv::Mat& InputImg,int SplitFactor){
 		std::vector<cv::Mat> retval;
         int MaxRows=((InputImg.rows));
@@ -176,12 +148,6 @@ namespace Utility {
 		return retval;
 	}
 
-    /**
-     * @brief imgRestore: restores an image from it's segments
-     * @param ImgSet: vector containing all image chunks
-     * @param size
-     * @return
-     */
     cv::Mat imgRestore(const std::vector<cv::Mat>& ImgSet,CvSize size){
         cv::Mat retval,CurCol;
         for(cv::Mat m : ImgSet){
@@ -199,9 +165,6 @@ namespace Utility {
         return retval;
     }
 
-	/**
-	 * Helper to do PCA on x & y on an image.
-	 */
 	cv::Mat doMultiPCA(cv::Mat *img,CvSize newImgSize) {
 		cv::PCA pcaR(*img, cv::Mat(), CV_PCA_DATA_AS_ROW, newImgSize.width);
 		cv::Mat RowProj = pcaR.project(*img);

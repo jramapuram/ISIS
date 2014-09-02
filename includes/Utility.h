@@ -20,6 +20,7 @@ namespace Utility{
     std::vector<cv::Mat> imgSegment(const cv::Mat&,int SplitFactor=8); //default split factor is 8
     void convertTo32Bit(cv::Mat *);
     std::string getImageType(int);
+    std::vector<std::string> split(const std::string& str, const char* separator);
     cv::Mat sigmoid(const cv::Mat& ,float beta,float alpha);
     cv::Mat imgRestore(const std::vector<cv::Mat>& ,CvSize );
 }

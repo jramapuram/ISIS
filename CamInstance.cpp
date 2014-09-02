@@ -39,14 +39,10 @@ void CamInstance::AITrainCompletedSlot()
 
 void CamInstance::GenericInit()
 {
-    setImageSize(Isis::config->height,Isis::config->width);
+    setImageSize(Isis::config->height, Isis::config->width);
     resetImageSet();
 }
 
-/**
- * Helper to reset the images to zeros.
- * Resets all CamNumber Image sets
- */
 void CamInstance::resetImageSet(){
     MHI_         = Mat::zeros(imgSize, CV_32FC1);
     orientation_ = Mat::zeros(imgSize, CV_32FC1);
@@ -54,11 +50,6 @@ void CamInstance::resetImageSet(){
     mask_        = Mat::zeros(imgSize, CV_8UC1);
 }
 
-
-/**
- * Helper to return a rect of the region where we detected movement
- * TODO: Cleanup & optimize
- */
 Rect CamInstance::getNonZeroROI(const Mat & BinaryImg)
 {
     /*
@@ -94,23 +85,19 @@ Rect CamInstance::getNonZeroROI(const Mat & BinaryImg)
 
 void CamInstance::convertToGrayScale(const Mat& OutImg)
 {
-        if(frame1_.empty() && frame2_.empty()){
+    if(frame1_.empty() && frame2_.empty()){
+        cvtColor(OutImg, frame1_, CV_BGR2GRAY);
+        cvtColor(OutImg, frame2_, CV_BGR2GRAY);
+    }else{
+        if(EveryOtherFlag){
             cvtColor(OutImg, frame1_, CV_BGR2GRAY);
-            cvtColor(OutImg, frame2_, CV_BGR2GRAY);
         }else{
-            if(EveryOtherFlag){
-                cvtColor(OutImg, frame1_, CV_BGR2GRAY);
-            }else{
-                cvtColor(OutImg, frame2_, CV_BGR2GRAY);
-            }
+            cvtColor(OutImg, frame2_, CV_BGR2GRAY);
         }
-        EveryOtherFlag?EveryOtherFlag=false:EveryOtherFlag=true;
+    }
+    EveryOtherFlag?EveryOtherFlag=false:EveryOtherFlag=true;
 }
 
-/**
- * Detect motion based on magnitude direction
- * TODO: Need to cleanup according to newer functions
- */
 double CamInstance::DetectMotionDirection(const Mat &Img)
 {
     try{
@@ -128,20 +115,12 @@ double CamInstance::DetectMotionDirection(const Mat &Img)
     return 0;
 }
 
-/**
- * Sets isRunning false if we have pressed 'esc'
- */
 void CamInstance::ExitConditionCheck(){
     if ( (cvWaitKey(33) & 255) == 27 ) { //time delay is necessary for namedWindow
             Isis::isRunning=false;
     }
 }
 
-/**
- * @brief CamInstance::setImageSize will set the height and width. Note that by now the image vector will be truncated to 1 item.
- * @param height
- * @param width
- */
 void CamInstance::setImageSize(double NewHeight,double NewWidth){
     try{
         log()->debug("m_DepthSensorExists: %d",m_DepthSensorExists);
@@ -160,11 +139,6 @@ void CamInstance::setImageSize(double NewHeight,double NewWidth){
     }
 }
 
-/**
- * @brief CamInstance::getImage is a thread safe mechanism to get the latest image
- * @param CamNumber
- * @return
- */
 const cv::Mat& CamInstance::getImage(){
     {//scoped lock
         boost::mutex::scoped_lock lock(mPoll);
@@ -193,11 +167,6 @@ const cv::Mat& CamInstance::getDepthImage(){
     }
 }
 
-/**
- * @brief CamInstance::getCurrentFrameIndex returns the pos in the frame index
- * @param CamNumber
- * @return
- */
 int CamInstance::getCurrentFrameIndex(){
     try{
         return (int)input->get(CV_CAP_PROP_POS_FRAMES);
@@ -207,11 +176,6 @@ int CamInstance::getCurrentFrameIndex(){
     return 0;
 }
 
-/**
- * @brief CamInstance::getTotalFrames : return frame count
- * @param CamNumber
- * @return
- */
 int CamInstance::getTotalFrames(){
     try{
         return (int)input->get(CV_CAP_PROP_FRAME_COUNT);
@@ -221,11 +185,6 @@ int CamInstance::getTotalFrames(){
     return 0;
 }
 
-/**
- * @brief CamInstance::moveToFrame will move to the frame specified
- * @param frame
- * @param CamNumber
- */
 void CamInstance::moveToFrame(int frame){
     log()->debug("moveToFrame>>>");
     try{
@@ -235,18 +194,10 @@ void CamInstance::moveToFrame(int frame){
     }
 }
 
-/**
- * @brief CamInstance::isOpened returns whether the instance of the camera is opened
- * @param CamNumber
- */
 bool CamInstance::isOpened(){
     return input->isOpened();
 }
 
-/**
- * Grab one image and place into imCur.
- * References CamNumber
- */
 void CamInstance::grabImage(){
     while(Isis::isRunning){
 //        boost::mutex::scoped_lock lk(mPoll);
@@ -330,9 +281,6 @@ void CamInstance::grabImage(){
 
 //}
 
-/**
- * Appends the triangle onto the image that is passed in and returns a MAT
- */
 void CamInstance::AppendRectangle(Mat* ImgSrc,RotatedRect RectToAppend)
 {
     try{
@@ -344,9 +292,6 @@ void CamInstance::AppendRectangle(Mat* ImgSrc,RotatedRect RectToAppend)
     }
 }
 
-/**
- * Overloaded for regular RECT
- */
 void CamInstance::AppendRectangle(Mat* ImgSrc,Rect RectToAppend)
 {
     try{
@@ -358,15 +303,12 @@ void CamInstance::AppendRectangle(Mat* ImgSrc,Rect RectToAppend)
     }
 }
 
-/**
- * Returns where in the real image the gaussian values are nonzero after thresholding
- */
 Mat CamInstance::GetMotionImage(const Mat& img, const Mat& foregroundImg, Rect ROI)
 {
     Mat retval;
     try{
         Mat tmpROIImg=(img)(ROI); //dont double use
-        bitwise_and(tmpROIImg,tmpROIImg,retval,(foregroundImg)(ROI));
+        bitwise_and(tmpROIImg, tmpROIImg, retval, (foregroundImg)(ROI));
     }catch(const cv::Exception &ex){
        log()->error("Error in Using bitwise_and for segmentation: %s",ex.what());
     }
@@ -379,31 +321,19 @@ bool CamInstance::IsThereMotion(int MotionMagMOG, double gradAngle){
     return(gradAngle>10 && gradAngle<200 && MotionMagMOG>=MIN_COUNT_MOTION);
 }
 
-/**
- * Returns true when a matrix is not valid
- */
 bool CamInstance::isMatrixNull(const Mat &imgToCheck){
     return (imgToCheck.empty() || imgToCheck.cols==0 || imgToCheck.rows==0);
 }
 
-/**
- * Returns true when a rectangle is not valid
- */
 bool CamInstance::isRectNull(Rect rectToCheck){
     return( (rectToCheck.height==0 || rectToCheck.width==0 || rectToCheck.area()<1000 ) );
 }
 
-/**
- * Returns true when a rectangle is not valid
- */
 bool CamInstance::isRectNull(RotatedRect rectToCheck){
     Rect rectToCheck_Reg = rectToCheck.boundingRect();
     return( (rectToCheck_Reg.height==0 || rectToCheck_Reg.width==0 ));
 }
 
-/**
- * Processes the Mixture of gaussian algorithm, returns non-zero pixel count
- */
 int CamInstance::MixtureOfGaussians(const Mat& img)
 {
     mog(img,foreground_,0.1);
@@ -411,25 +341,20 @@ int CamInstance::MixtureOfGaussians(const Mat& img)
     return countNonZero(foreground_);
 }
 
-/**
- * Tabulate init rectangle and then run CamShift on the system to move the region
- */
 Mat CamInstance::segmentImage(const cv::Mat& imgToSegment)
 {
     Mat retval;
     if(!isMatrixNull(foreground_)){
         Rect camshiftResult = getNonZeroROI(foreground_);
         if(!isRectNull(camshiftResult)) {
-            retval = GetMotionImage(imgToSegment, foreground_, camshiftResult);
+            //uncomment to get the xor image
+            //retval = GetMotionImage(imgToSegment, foreground_, camshiftResult);
+            retval = (imCur_)(camshiftResult);
         }
     }
     return retval;
 }
 
-/**
- * Mixture of Gaussians method to detect motion
- * Also saves the file if motion exceeds threshold
- */
 void CamInstance::MovementDetection()
 {
     Mat latestimg = getImage();
@@ -440,16 +365,14 @@ void CamInstance::MovementDetection()
             log()->debug("Motion detected [Gradmad: %e | MOGMAG: %e]",GradAngle_, MOGMag_);
             segmentedImage_ = segmentImage(latestimg);
             if(!segmentedImage_.empty()){
-                cvtColor(segmentedImage_, segmentedImage_, CV_BGR2GRAY);
-                imgQueue.Enqueue(imCur_);//segmentedImage_);
+                //cvtColor(segmentedImage_, segmentedImage_, CV_BGR2GRAY);
+                imwrite("test.png",segmentedImage_);
+                imgQueue.Enqueue(segmentedImage_);
             }
         }
     }
 }
 
-/**
- * @brief CamInstance::RegisterEvents registers for events that vision needs [like DAE training complete, etc]
- */
 void CamInstance::RegisterEvents(){
     registerEvent(*VisionManager::instance()->getAIInstance(index_),"StackedDAETrainingComplete",[&] () {
         log()->info("Base AI training complete. Motion will now be calculated for a new object");
@@ -457,9 +380,6 @@ void CamInstance::RegisterEvents(){
     });// Note: this is how you pass to a method boost::bind(&CamInstance::AITrainCompletedSlot,this));
 }
 
-/**
- * Entry point into Vision
- */
 void CamInstance::Run() {
     RegisterEvents();
     imPollerThread.reset(new boost::thread(&CamInstance::grabImage,this));

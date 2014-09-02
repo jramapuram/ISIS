@@ -52,7 +52,7 @@ private:
     const double                            MHI_DURATION_MS = 1000; //1sec
     const double                            MIN_DELTA = 50, MAX_DELTA = 500;
     const int                               MIN_COUNT_MOTION = 10000;
-    const unsigned int                      DEFAULT_QUEUE_SIZE = 100;
+    const unsigned int                      DEFAULT_QUEUE_SIZE = 10;
 
     bool EveryOtherFlag, motionFlags,isAlreadyRecording, isStackedDAETrained, m_DepthSensorExists;
 

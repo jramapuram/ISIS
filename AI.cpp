@@ -72,8 +72,11 @@ void AI::predict(const std::string& network_proto){
     removeAll(IMG_DIR + "/" + PREDICT_DIR);
 }
 
-Net<float>* AI::load_network(const std::string& proto_model, const std::string& pretrained_model){
-    if(networks_.find(proto_model) == networks_.end()){
+Net<float>* AI::load_network(const std::string& proto_model
+                             , const std::string& pretrained_model)
+{
+    if(networks_.find(proto_model) == networks_.end())
+    {
         log()->debug("Created new network from [%s | %s]", proto_model, pretrained_model);
         networks_[proto_model] = new Net<float>(proto_model);
         networks_[proto_model]->CopyTrainedLayersFrom(pretrained_model); //get trained net

@@ -7,3 +7,12 @@
 [submodule "libs/MOE"]
 	path = libs/MOE
 	url = git://github.com/Yelp/MOE
+[submodule "libs/clBLAS"]
+	path = libs/clBLAS
+	url = https://github.com/arrayfire/clBLAS
+[submodule "libs/clFFT"]
+	path = libs/clFFT
+	url = https://github.com/arrayfire/clFFT
+[submodule "libs/arrayfire"]
+	path = libs/arrayfire
+	url = https://github.com/arrayfire/arrayfire

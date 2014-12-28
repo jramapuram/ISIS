@@ -7,13 +7,14 @@ SET(PROJECT_VERSION "0.2.0")
 SET(USE_GPU 1)
 ADD_DEFINITIONS(-DPROJECT_VERSION="${PROJECT_VERSION}")
 ADD_DEFINITIONS(-DPROJECT_PREFIX="${PROJECT_PREFIX}")
+MESSAGE("Building with GPU Mode:'${USE_GPU}'")
 ###################### </Version> ######################
 
 INCLUDE_DIRECTORIES (
 	"${PROJECT_SOURCE_DIR}/includes" 
-        "${PROJECT_SOURCE_DIR}/libs/caffe/include"
-        "${PROJECT_SOURCE_DIR}/libs/MITIE/mitielib/include"
-        "${PROJECT_SOURCE_DIR}/ui/includes"
+    "${PROJECT_SOURCE_DIR}/libs/caffe/include"
+    "${PROJECT_SOURCE_DIR}/libs/MITIE/mitielib/include"
+    "${PROJECT_SOURCE_DIR}/ui/includes"
 )
 
 SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "/usr/local/include/boost")
@@ -24,7 +25,7 @@ SET(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 ###################### <ADD QT5 & BOOST PARAMS> ######################
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "/usr/local/Cellar/qt5/5.3.0/lib/cmake/Qt5Widgets/")  #"~/Applications/Qt5.3.0/5.3/clang_64/lib/cmake/Qt5Widgets")
+    SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "~/Applications/Qt5.3.0/5.3/clang_64/lib/cmake/Qt5Widgets") #"/usr/local/Cellar/qt5/5.3.0/lib/cmake/Qt5Widgets/")
 ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
@@ -120,8 +121,8 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/libs/caffe/build/src)
 SET(REQD_MODELS
     isis.proto
     isis_solver.proto
-    imagenet_deploy.prototxt
-    caffe_reference_imagenet_model
+    deploy.prototxt
+    bvlc_reference_caffenet.caffemodel
     synset_words.txt
 )
 FILE(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/models)

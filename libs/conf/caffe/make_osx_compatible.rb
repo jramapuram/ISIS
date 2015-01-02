@@ -7,11 +7,12 @@ text = File.read(FILE_PATH)
 replace = text.gsub(COMMENT_OUT_TESTS, "//#{COMMENT_OUT_TESTS}")
 File.open(FILE_PATH, "w") {|file| file.puts replace}
 
-imagenet_dir    = "../../caffe/models/bvlc_reference_caffenet"
+caffe_dir       = "../../caffe"
+imagenet_dir    = "#{caffe_dir}/models/bvlc_reference_caffenet"
 imagenet_model  = imagenet_dir + "/bvlc_reference_caffenet.caffemodel"
-imagenet_script = "./get_caffe_reference_imagenet_model.sh #{imagenet_dir}"
+imagenet_script = "scripts/download_model_binary.py" #{imagenet_dir}"
 unless File.exist?(imagenet_model)
-	Dir.chdir(imagenet_dir){
+	Dir.chdir(caffe_dir){
 		%x[#{imagenet_script}]
 	}
 end

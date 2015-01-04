@@ -11,13 +11,13 @@ MESSAGE("Building with GPU Mode:'${USE_GPU}'")
 ###################### </Version> ######################
 
 INCLUDE_DIRECTORIES (
-	"${PROJECT_SOURCE_DIR}/includes" 
+    "${PROJECT_SOURCE_DIR}/includes" 
     "${PROJECT_SOURCE_DIR}/libs/caffe/include"
     "${PROJECT_SOURCE_DIR}/libs/MITIE/mitielib/include"
     "${PROJECT_SOURCE_DIR}/ui/includes"
 )
 
-SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "/usr/local/include/boost")
+SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "/usr/local/include")
 SET(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "/usr/local/lib")
 SET(CMAKE_CXX_FLAGS "-std=c++11")
 #SET(CMAKE_AUTOMOC ON)
@@ -75,6 +75,7 @@ SET(ISIS_SOURCE
 FIND_PACKAGE( OpenCV REQUIRED )
 FIND_PACKAGE( Qt5Widgets REQUIRED )
 FIND_PACKAGE( Boost COMPONENTS thread system filesystem chrono log program_options)
+FIND_PACKAGE( CUDA REQUIRED )
 ###################### </Find The Reqd Packages> ####################
 
 

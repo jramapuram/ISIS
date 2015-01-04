@@ -13,7 +13,7 @@ imagenet_model  = imagenet_dir + "/bvlc_reference_caffenet.caffemodel"
 imagenet_script = "scripts/download_model_binary.py" #{imagenet_dir}"
 unless File.exist?(imagenet_model)
 	Dir.chdir(caffe_dir){
-		%x[#{imagenet_script}]
+		%x[#{imagenet_script} #{imagenet_model}]
 	}
 end
 

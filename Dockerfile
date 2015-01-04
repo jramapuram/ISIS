@@ -31,6 +31,7 @@ RUN apt-get install -qqy \
        emacs24-nox \
        dh-autoreconf \
        libleveldb-dev \
+       libyaml-dev \
        liblmdb-dev \
        libsnappy-dev \
        libhdf5-serial-dev \
@@ -86,7 +87,7 @@ RUN cd /opt && \
   make install
 
 # Python related
-pip install pyyaml urllib3 hashlib argparse
+RUN pip install pyyaml urllib3 hashlib argparse
 
 # Build ISIS
 RUN mkdir ISIS
